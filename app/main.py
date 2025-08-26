@@ -27,8 +27,8 @@ class Main:
             max_capital=100000, max_loss_per_day=5000, max_loss_per_trade=1000
         )
         self.broker = UpstoxWrapper(
-            api_key="25ade58c-4dfb-464a-91d4-0fc61c145d05",
-            access_token="eyJ0eXAiOiJKV1QiLCJrZXlfaWQiOiJza192MS4wIiwiYWxnIjoiSFMyNTYifQ.eyJzdWIiOiI0U0FFQlUiLCJqdGkiOiI2OGFkNWVhOTI1ODlkYjMxNTkyN2ZlMjIiLCJpc011bHRpQ2xpZW50IjpmYWxzZSwiaXNQbHVzUGxhbiI6ZmFsc2UsImlhdCI6MTc1NjE5MjQyNSwiaXNzIjoidWRhcGktZ2F0ZXdheS1zZXJ2aWNlIiwiZXhwIjoxNzU2MjQ1NjAwfQ.uWCeFU_mqENYFO3k38IcJ_FY9lRyNbgSyLNWqPczg1I",
+            api_key="your api key",
+            access_token="your access token",
             logger=self.logger,
             real_trade=False
         )
