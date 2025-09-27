@@ -1,19 +1,26 @@
+
 import logging
+from logging.handlers import RotatingFileHandler
+from pathlib import Path
 
 class StrategyLogger:
-    def __init__(self, name="VWAP_Logger"):
+    def __init__(self, name: str = "nifty50_vwap_bot", log_file: str = "logs/strategy.log"):
+        Path("logs").mkdir(parents=True, exist_ok=True)
         self.logger = logging.getLogger(name)
-        if not self.logger.hasHandlers():
-            self.logger.setLevel(logging.INFO)
-            ch = logging.StreamHandler()
-            formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-            ch.setFormatter(formatter)
-            self.logger.addHandler(ch)
+        self.logger.setLevel(logging.INFO)
 
-    def log(self, level, message):
-        if level.lower() == "info":
-            self.logger.info(message)
-        elif level.lower() == "error":
-            self.logger.error(message)
-        elif level.lower() == "warning":
-            self.logger.warning(message)
+        ch = logging.StreamHandler()
+        ch.setLevel(logging.INFO)
+        ch.setFormatter(logging.Formatter("[%(asctime)s] %(levelname)s - %(message)s"))
+
+        fh = RotatingFileHandler(log_file, maxBytes=2_000_000, backupCount=3)
+        fh.setLevel(logging.INFO)
+        fh.setFormatter(logging.Formatter("%(asctime)s | %(levelname)s | %(name)s | %(message)s"))
+
+        if not self.logger.handlers:
+            self.logger.addHandler(ch)
+            self.logger.addHandler(fh)
+
+    def log(self, level: str, msg: str):
+        level = level.lower()
+        getattr(self.logger, level if level in ("info","warning","error","debug") else "info")(msg)

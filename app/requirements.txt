@@ -1,4 +1,7 @@
+pandas>=2.3.2
+numpy>=1.24.0
 backtrader>=1.9.78.123
-pandas>=2.0
-requests>=2.31
+openpyxl>=3.1.2
 beautifulsoup4>=4.12
+upstox-python-sdk>=2.17.0
+
