@@ -10,7 +10,7 @@ class PaperTrader:
         self.closed_trades = []
         self.paper_trades_log_file = paper_trades_log_file
         # Set up logger
-        self.logger = Logger('PaperTrader')
+        self.logger = Logger(log_file="logs/trading.log", logger_name="PaperTrader")
 
         # Write CSV header if file does not exist
         if not os.path.exists(self.paper_trades_log_file):

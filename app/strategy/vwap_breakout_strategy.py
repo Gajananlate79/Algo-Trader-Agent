@@ -4,9 +4,10 @@ from app.utils.logger import Logger
 
 MIN_STOP_LOSS = 0.5  # minimum ATR multiplier for SL
 MIN_TAKE_PROFIT = 1.0  # minimum ATR multiplier for TP
+#SHORT MA:14,LONG MA:30,RSI:14,ATR:14,RISK REWARD RATIO:2 - more stable trading. 9 and 21 for
 
 class VWAPAdvancedStrategy:
-    def __init__(self, rsi_period=14, short_ma=20, long_ma=50, atr_period=14, risk_reward_ratio=2):
+    def __init__(self, rsi_period=14, short_ma=9, long_ma=30, atr_period=14, risk_reward_ratio=2):
         """
         Initializes strategy parameters and data storage.
         """
@@ -43,7 +44,7 @@ class VWAPAdvancedStrategy:
         columns = ["timestamp", "open", "high", "low", "close", "price", "volume"]
         if symbol not in self.data:
             self.data[symbol] = pd.DataFrame(columns=columns)
-        new_row = pd.DataFrame([{
+        new_row = pd.DataFrame([{ #For now
             "timestamp": timestamp,
             "open": open_price if open_price is not None else price,
             "high": high if high is not None else price,
@@ -105,6 +106,7 @@ class VWAPAdvancedStrategy:
         true_range = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
         atr = true_range.rolling(window=self.atr_period).mean()
         return atr.iloc[-1]
+
     # ------------------------------------------------
     # 4. STRATEGY SIGNAL EVALUATION
     # ------------------------------------------------
@@ -121,10 +123,14 @@ class VWAPAdvancedStrategy:
         df = self.data[symbol]
         if len(df) < max(self.long_ma, self.rsi_period, self.atr_period):
             return None
+        #Sort dataframe by timestamp to ensure correct order -old data should come first
+        df = df.sort_values("timestamp").reset_index(drop=True)
         vwap = self.calculate_vwap(df)
         rsi = self.calculate_rsi(df)
         ma_short, ma_long = self.calculate_ma(df)
         atr = self.calculate_atr(df)
+        self.logger.log("info", f"Indicators for {symbol} at {timestamp} - VWAP: {vwap}, RSI: {rsi}, MA Short: {ma_short}, MA Long: {ma_long}, ATR: {atr}")
+
         # Check for NaN
         if any(pd.isna(x) for x in [vwap, rsi, ma_short, ma_long, atr]):
             return None

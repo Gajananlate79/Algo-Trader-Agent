@@ -1,6 +1,8 @@
 import asyncio
 import time
 from datetime import datetime, timezone
+
+import numpy as np
 import pandas as pd
 
 from broker.upstox_wrapper import UpstoxWrapper
@@ -86,7 +88,7 @@ class TradingBotMain:
             self.logger.log("error", f"Error loading Nifty50 list: {str(e)}")
             return pd.DataFrame(columns=["INSTRUMENT_KEY", "SYMBOL"])
 
-    def select_top_stocks(self, df_instruments):
+    def select_top_stocks_with_ohlc_data(self, df_instruments):
                 """
                 Fetch historical data and select top 3 stocks based on the last candle volume.
 
@@ -159,8 +161,8 @@ class TradingBotMain:
             self.logger.log("error", "Nifty50 instrument list is empty. Exiting.")
             return
 
-        # Step 2: Select top 3 stocks
-        top_stocks_data = self.select_top_stocks(self.df_instruments)
+        # Step 2: Select top 3 stocks and its historical data + current day data
+        top_stocks_data = self.select_top_stocks_with_ohlc_data(self.df_instruments)
         if not top_stocks_data:
             self.logger.log("error", "Could not select top 3 stocks. Exiting.")
             return
@@ -175,7 +177,7 @@ class TradingBotMain:
         def on_tick(data):
             self.logger.log("info", "on_tick Callback is called...")
             if data is None:
-                print("Received None data in update_data")
+                self.logger.log("info", "Received no data in on_tick, skipping...")
                 return
 
             try:
@@ -195,7 +197,7 @@ class TradingBotMain:
                  return
 
                 signal = evaluate_result["signal"]
-
+                #This is for testing purpose only, remove in production or real trading
                 self.mock_mode =True
                 # Check if order already placed
                 if self.placed_orders.get(symbol_key):
@@ -207,8 +209,10 @@ class TradingBotMain:
                     symbol_row = self.df_instruments[self.df_instruments["INSTRUMENT_KEY"] == symbol_key]
                     if not symbol_row.empty:
                         symbol_value = symbol_row.iloc[0]["SYMBOL"]
+                        # Convert np.float64 to float for logging
+                        params_clean = {k: float(v) if isinstance(v, np.floating) else v for k, v in evaluate_result.items()}
                         self.logger.log("info", f"Placing order for instrument {symbol_key} key and name {symbol_value} "
-                                            f"with parameters {evaluate_result}")
+                                            f"with parameters {params_clean}")
                     else:
                         self.logger.log("warning", f"Symbol not found for {symbol_key}")
 
@@ -285,7 +289,7 @@ def convert_ltt_to_datetime(ltt_value):
 
 if __name__ == "__main__":
     config = {
-        "ACCESS_TOKEN": "add acceess token here",
+        "ACCESS_TOKEN": "eyJ0eXAiOiJKV1QiLCJrZXlfaWQiOiJza192MS4wIiwiYWxnIjoiSFMyNTYifQ.eyJzdWIiOiI0U0FFQlUiLCJqdGkiOiI2OGQ3YmVlNzdmNjU0MDU4Zjg3ZTU1MjEiLCJpc011bHRpQ2xpZW50IjpmYWxzZSwiaXNQbHVzUGxhbiI6ZmFsc2UsImlhdCI6MTc1ODk2OTU3NSwiaXNzIjoidWRhcGktZ2F0ZXdheS1zZXJ2aWNlIiwiZXhwIjoxNzU5MDEwNDAwfQ.L-qeAm6PvFAchhM-LXNZ3CSYY1XMu1I0BkIJgBJHbtE",
         "MOCK_MODE": False  # False = Live Trading, True = Paper Trading
     }
     bot = TradingBotMain(config)
